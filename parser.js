@@ -7,9 +7,8 @@ var async = require('async');
 var dirPath = process.env.ARFS_PATH + "/"; //provice here your path to dir
 var outputPath = process.env.OUTPUT_PATH;
 var globalFilesPath = [];
-parseArfs(dirPath);
 
-function parseArfs(dirPath) {
+function parseArfs() {
     console.log("Parsing...");
     fs.readdir(dirPath, readDirectory);
 }
@@ -22,17 +21,6 @@ function readDirectory(err, filesPath) {
 
 function readFile(filePath, cb) {
     fs.readFile(filePath, 'utf8', cb);
-}
-function processFiles(err, filesData) {
-        var parsed = filesData.map((arf) => {
-            return parse(arf);
-        })
-        var joined = globalFilesPath.map((file, index) => {
-            return {fileName: file, data: extractData(parsed[index])};
-        })
-
-        var grouped = groupByRecordId(joined);
-        writeArfs(grouped);
 }
 function getFilePaths(dirPath, filesPath) {
     return filesPath.map(function(filePath){ //generating paths to file
@@ -49,6 +37,52 @@ function ensureDirectoryExistence(filePath) {
     fs.mkdirSync(dirname, 0755);
 }
 
+/*
+* Right now it only works for an specific arf. 
+* We need to modify the extractData and groupByRecordId so that it works with no assumtions
+*/
+function processFiles(err, filesData) {
+        var parsed = filesData.map((arf) => {
+            return parse(arf);
+        })
+        var joined = globalFilesPath.map((file, index) => {
+            return {fileName: file, data: extractData(parsed[index])};
+        })
+
+        var grouped = groupByRecordId(joined);
+        writeArfs(grouped);
+}
+
+/*
+* Right now it only works for an specific arf. 
+* We need to modify the extractData and groupByRecordId so that it works with no assumtions
+*/
+function groupByRecordId(array) {
+    var idsMap = new Map();
+    array.map((arf) => {
+        var recordId = arf.data.CodigoDeOperacion;
+        if(idsMap.has(recordId)) {
+            idsMap.get(recordId).push(arf);
+        } else {
+            idsMap.set(recordId, [arf]);
+        }
+    });
+    return idsMap;
+}
+
+/*
+* Right now it only works for an specific arf. 
+* We need to modify the extractData and groupByRecordId so that it works with no assumtions
+*/
+function extractData(arf) {
+    var props = new Object;
+    arf.root.children[0].children[0].children.map((node) => {
+        var key = node.name;
+        var data = node.content;
+        props[key]=data;
+    })
+    return props;
+}
 function writeArfs(arfsMap) {
     fs.removeSync(__dirname+'/'+outputPath);       
     ensureDirectoryExistence(__dirname+"/"+outputPath+"/a");            
@@ -69,35 +103,7 @@ function writeArfs(arfsMap) {
     console.log("Done!");
 }
 
-function groupByRecordId(array) {
-    var idsMap = new Map();
-    array.map((arf) => {
-        var recordId = arf.data.CodigoDeOperacion;
-        if(idsMap.has(recordId)) {
-            idsMap.get(recordId).push(arf);
-        } else {
-            idsMap.set(recordId, [arf]);
-        }
-    });
-    return idsMap;
-}
 
-function extractData(arf) {
-    var props = new Object;
-    arf.root.children[0].children[0].children.map((node) => {
-        var key = node.name;
-        var data = node.content;
-        props[key]=data;
-    })
-    return props;
-}
-
-
-function makeArfsArray(arfs) {
-   // console.log(arfs);
-    arfs.map((arf) => {
-        arf.root.children[0].children[0].children.map((node) => {
-            //console.log(node.name, node.content);
-        })
-    })
+module.exports = {
+    parse : parseArfs
 }
