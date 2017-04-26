@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  div.form
+    label(for="name")="Search" 
+      input(id="name", name="search", type="text" onKeyUp="search.call(this)") 
+  ul(id="arfs_list")
+    each file in files
+        li(id=`${file}`) 
+            a(href="/output/"+dir+"/"+file)= file 
+  script.
+    var search = function() {
+      console.log(this.value);
+      var list = document.getElementById("arfs_list").children;
+      var a = Array.prototype.slice.call(list);
+      a.map((list_item) => list_item.hidden=false);
+      a.map((list_item) => {
+          var id = list_item.id;
+          if(!id.includes(this.value)) {
+            list_item.hidden=true;
+          }
+      });
+      console.log(list);
+    }

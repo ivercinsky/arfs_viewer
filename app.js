@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var serveIndex = require('serve-index');
 var index = require('./routes/index');
 var users = require('./routes/users');
+var arfs = require('./routes/arfs');
+var arf = require('./routes/arf');
 var parser = require('./parser.js');
 
 var app = express();
@@ -27,6 +29,8 @@ app.use('/output', serveIndex(__dirname+'/public/output'));
 
 app.use('/', index);
 app.use('/users', users);
+app.use('/arfs', arfs);
+app.use('/arfs/:dir', arf);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
