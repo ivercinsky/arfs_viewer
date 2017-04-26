@@ -2,4 +2,81 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #{title}
+  h2 Welcome to #{title}
+  p Drop a .zip with arfs you want to parse here
+  div(id="dropspace" 
+      style="min-height: 200px; white-space: pre; border: 1px solid black;"
+      ondragenter="document.getElementById('dropspace').textContent = ''; event.stopPropagation(); event.preventDefault();"
+      ondragover="event.stopPropagation(); event.preventDefault();"
+      ondrop="event.stopPropagation(); event.preventDefault(); dodrop(event);" 
+  )="DROP SPACE"
+  script.
+    function dodrop(event)
+    {
+      var dt = event.dataTransfer;
+      var files = dt.files;
+
+      var count = files.length;
+      output("File Count: " + count + "\n");
+
+      for (var i = 0; i < files.length; i++) {
+        output(" File " + i + ":\n(" + (typeof files[i]) + ") : <" + files[i] + " > " +
+              files[i].name + " " + files[i].size + "\n");
+      }
+      clear("dropspace");
+      uploadFile(files[0]);
+
+    }
+
+    function uploadFile(file) {
+      var xhr = new XMLHttpRequest();
+      var fd = new FormData();
+      fd.append("author", "Shiv Kumar");
+      fd.append("name", "FormData");
+      fd.append("arfs_file", file);
+
+      /* event listners */
+      xhr.upload.addEventListener("progress", uploadProgress, false);
+      xhr.addEventListener("load", uploadComplete, false);
+      xhr.addEventListener("error", uploadFailed, false);
+      xhr.addEventListener("abort", uploadCanceled, false);
+      /* Be sure to change the url below to the url of your upload server side script */
+      xhr.open("POST", "/arfs_file");
+      xhr.send(fd);
+    }
+
+    function uploadProgress(evt) {
+      if (evt.lengthComputable) {
+        var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+        output(percentComplete.toString() + '%');
+      }
+      else {
+        output('unable to compute');
+      }
+    }
+
+    function uploadComplete(evt) {
+      /* This event is raised when the server send back a response */
+      output(evt.target.responseText);
+      window.location.href="/arfs";
+    }
+
+    function uploadFailed(evt) {
+      output("There was an error attempting to upload the file.");
+    }
+
+    function uploadCanceled(evt) {
+      output("The upload has been canceled by the user or the browser dropped the connection.");
+    }
+
+    function output(text)
+    {
+      document.getElementById("dropspace").textContent += text;
+      //dump(text);
+    }
+
+    function clear(id) {
+      document.getElementById(id).textContent="";
+    }
+
+

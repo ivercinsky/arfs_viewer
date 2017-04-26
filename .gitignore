@@ -3,3 +3,5 @@ output/
 node_modules/
 public/output/
 *.log
+uploads
+*.zip
